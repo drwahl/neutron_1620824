@@ -14,60 +14,13 @@
         name: devstack
         description: Access to devstack services
 
-    - name: 'allow general access to keystone'
+    # opening up all ports, because it's devstack
+    - name: 'allow to all ports - do not ever do this'
       os_security_group_rule:
         security_group: devstack
         protocol: tcp
-        port_range_min: 35357
-        port_range_max: 35357
-        remote_ip_prefix: 0.0.0.0/0
-
-    - name: 'allow admin access to keystone'
-      os_security_group_rule:
-        security_group: devstack
-        protocol: tcp
-        port_range_min: 5000
-        port_range_max: 5000
-        remote_ip_prefix: 0.0.0.0/0
-
-    - name: 'allow access to novnc'
-      os_security_group_rule:
-        security_group: devstack
-        protocol: tcp
-        port_range_min: 6080
-        port_range_max: 6080
-        remote_ip_prefix: 0.0.0.0/0
-
-    - name: 'allow access to glance-api'
-      os_security_group_rule:
-        security_group: devstack
-        protocol: tcp
-        port_range_min: 9292
-        port_range_max: 9292
-        remote_ip_prefix: 0.0.0.0/0
-
-    - name: 'allow access to neutron-api'
-      os_security_group_rule:
-        security_group: devstack
-        protocol: tcp
-        port_range_min: 9696
-        port_range_max: 9696
-        remote_ip_prefix: 0.0.0.0/0
-
-    - name: 'allow access to nova-api'
-      os_security_group_rule:
-        security_group: devstack
-        protocol: tcp
-        port_range_min: 8774
-        port_range_max: 8775
-        remote_ip_prefix: 0.0.0.0/0
-
-    - name: 'allow access to glance-registry'
-      os_security_group_rule:
-        security_group: devstack
-        protocol: tcp
-        port_range_min: 9191
-        port_range_max: 9191
+        port_range_min: 1
+        port_range_max: 65536
         remote_ip_prefix: 0.0.0.0/0
 
     - name: 'launch controller instance'
