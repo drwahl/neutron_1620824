@@ -1,0 +1,60 @@
+[[local|localrc]]
+
+# Switch to Neutron
+disable_service n-net
+enable_service n-cond
+enable_service q-svc
+enable_service q-agt
+enable_service q-dhcp
+enable_service q-l3
+enable_service q-meta
+enable_service neutron
+
+# Enable multi-host
+MULTI_HOST=1
+
+# Disable cinder/heat/tempest for faster testing
+disable_service c-sch c-api c-vol h-eng h-api h-api-cfn h-api-cw tempest
+
+# Secrets
+ADMIN_PASSWORD=secrete
+DATABASE_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+
+## Use ML2 + LinuxBridge
+LB_PHYSICAL_INTERFACE=eth0
+PHYSICAL_NETWORK=public
+
+# Set ML2 plugin + LB agent
+Q_PLUGIN=ml2
+Q_AGENT=linuxbridge
+
+# Set ML2 mechanism drivers to LB and l2pop
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=linuxbridge,l2population
+
+# Set type drivers
+Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+
+# Use Neutron security groups
+Q_USE_SECGROUP=True
+
+# Set possible tenant network types
+Q_ML2_TENANT_NETWORK_TYPE=flat,vlan,vxlan
+
+FIXED_RANGE=10.0.0.0/24
+NETWORK_GATEWAY=10.0.0.1
+
+# Enable DVR with SNAT
+Q_DVR_MODE=dvr_snat
+
+HOST_IP=HOSTIP
+
+# workaround for https://bugs.launchpad.net/horizon/+bug/1622684
+NOVNC_BRANCH=v0.6.0
+
+[[post-config|/$Q_PLUGIN_CONF_FILE]]
+[vxlan]
+l2_population = True
+enable_vxlan = True
+local_ip=$HOST_IP

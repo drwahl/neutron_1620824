@@ -1,0 +1,170 @@
+- name: 'Launch controller VM'
+  hosts: localhost
+  connection: local
+  vars:
+    ssh_user: 'ubuntu'
+    controller_name: 'controller'
+    compute_name: 'controller'
+    key_name: 'dwahlstrom'
+
+  tasks:
+
+    - name: 'setup security group for devstack'
+      os_security_group:
+        name: devstack
+        description: Access to devstack services
+
+    - name: 'allow general access to keystone'
+      os_security_group_rule:
+        security_group: devstack
+        protocol: tcp
+        port_range_min: 35357
+        port_range_max: 35357
+        remote_ip_prefix: 0.0.0.0/0
+
+    - name: 'allow admin access to keystone'
+      os_security_group_rule:
+        security_group: devstack
+        protocol: tcp
+        port_range_min: 5000
+        port_range_max: 5000
+        remote_ip_prefix: 0.0.0.0/0
+
+    - name: 'allow access to novnc'
+      os_security_group_rule:
+        security_group: devstack
+        protocol: tcp
+        port_range_min: 6080
+        port_range_max: 6080
+        remote_ip_prefix: 0.0.0.0/0
+
+    - name: 'allow access to glance-api'
+      os_security_group_rule:
+        security_group: devstack
+        protocol: tcp
+        port_range_min: 9292
+        port_range_max: 9292
+        remote_ip_prefix: 0.0.0.0/0
+
+    - name: 'allow access to neutron-api'
+      os_security_group_rule:
+        security_group: devstack
+        protocol: tcp
+        port_range_min: 9696
+        port_range_max: 9696
+        remote_ip_prefix: 0.0.0.0/0
+
+    - name: 'allow access to nova-api'
+      os_security_group_rule:
+        security_group: devstack
+        protocol: tcp
+        port_range_min: 8774
+        port_range_max: 8775
+        remote_ip_prefix: 0.0.0.0/0
+
+    - name: 'allow access to glance-registry'
+      os_security_group_rule:
+        security_group: devstack
+        protocol: tcp
+        port_range_min: 9191
+        port_range_max: 9191
+        remote_ip_prefix: 0.0.0.0/0
+
+    - name: 'launch controller instance'
+      os_server:
+        state: present
+        name: "{{controller_name}}"
+        image: 'Ubuntu-14.04'
+        key_name: "{{key_name}}"
+        timeout: 200
+        flavor: 400
+        network: 'public'
+        security_groups:
+          - default
+          - devstack
+      register: mycontroller
+
+    - name: 'launch compute instance'
+      os_server:
+        state: present
+        name: "{{compute_name}}"
+        image: 'Ubuntu-14.04'
+        key_name: "{{key_name}}"
+        timeout: 200
+        flavor: 400
+        network: 'public'
+        security_groups:
+          - default
+          - devstack
+      register: mycompute
+
+    - add_host:
+        hostname={{ controller_name }}
+        ansible_ssh_host={{ mycontroller.server.public_v4 }}
+        ansible_ssh_user={{ ssh_user }}
+        ansible_become=true
+
+    - add_host:
+        hostname={{ compute_name }}
+        ansible_ssh_host={{ mycompute.server.public_v4 }}
+        ansible_ssh_user={{ ssh_user }}
+        ansible_become=true
+
+    - command: >
+        ssh -o BatchMode=yes -o StrictHostKeyChecking=no
+        {{ssh_user}}@{{mycontroller.server.public_v4}} true
+      register: result
+      until: result|success
+      retries: 30
+      delay: 5
+
+    - command: >
+        ssh -o BatchMode=yes -o StrictHostKeyChecking=no
+        {{ssh_user}}@{{mycompute.server.public_v4}} true
+      register: result
+      until: result|success
+      retries: 30
+      delay: 5
+
+- name: "Fetch/setup devstack on controller"
+  hosts: 'controller'
+  tasks:
+
+    - package: name=git state=latest
+
+    - git: repo=https://github.com/openstack-dev/devstack version=stable/mitaka dest=/home/ubuntu/devstack
+      become: yes
+      become_user: ubuntu
+
+    - copy: src="local.controller" dest="devstack/local.conf"
+      become: yes
+      become_user: ubuntu
+
+    - lineinfile: dest=devstack/local.conf regexp=^HOST_IP=HOSTIP line=HOST_IP={{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}
+      become: yes
+      become_user: ubuntu
+
+    - command: './stack.sh'
+      become: yes
+      become_user: ubuntu
+      args:
+        chdir: 'devstack'
+
+- name: "Fetch/setup devstack on compute node"
+  hosts: 'compute'
+  tasks:
+
+    - package: name=git state=latest
+
+    - git: repo=https://github.com/openstack-dev/devstack version=stable/mitaka dest=/home/ubuntu/devstack
+      become: yes
+      become_user: ubuntu
+
+    - copy: src="local.compute" dest="devstack/local.conf"
+      become: yes
+      become_user: ubuntu
+
+    - lineinfile: dest=devstack/local.conf regexp="SERVICE_HOST=CONTROLLER_HOST" line="SERVICE_HOST={{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}"
+
+    - debug: msg="Horizon is located at http://{{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}/dashboard as admin/secrete"
+    - debug: msg="Compute ssh connection info {{ hostvars['compute']['ansible_eth0']['ipv4']['address'] }}/dashboard as admin/secrete"
