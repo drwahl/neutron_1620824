@@ -1,10 +1,10 @@
-- name: 'Launch controller VM'
+- name: 'Launch devstack VMs'
   hosts: localhost
   connection: local
   vars:
     ssh_user: 'ubuntu'
     controller_name: 'controller'
-    compute_name: 'controller'
+    compute_name: 'compute'
     key_name: 'dwahlstrom'
 
   tasks:
