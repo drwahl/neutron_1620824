@@ -41,7 +41,8 @@ NETWORK_GATEWAY=10.0.0.1
 
 # Enable DVR with SNAT
 Q_DVR_MODE=dvr
-HOST_IP=208.113.129.102
+
+HOST_IP=HOSTIP
 
 # workaround for https://bugs.launchpad.net/horizon/+bug/1622684
 NOVNC_BRANCH=v0.6.0
