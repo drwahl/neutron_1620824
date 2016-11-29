@@ -164,7 +164,13 @@
       become: yes
       become_user: ubuntu
 
+    - lineinfile: dest=devstack/local.conf regexp=^HOST_IP=HOSTIP line=HOST_IP={{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}
+      become: yes
+      become_user: ubuntu
+
     - lineinfile: dest=devstack/local.conf regexp="SERVICE_HOST=CONTROLLER_HOST" line="SERVICE_HOST={{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}"
+      become: yes
+      become_user: ubuntu
 
     - debug: msg="Horizon is located at http://{{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}/dashboard as admin/secrete"
     - debug: msg="Compute ssh connection info {{ hostvars['compute']['ansible_eth0']['ipv4']['address'] }}/dashboard as admin/secrete"
