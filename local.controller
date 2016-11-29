@@ -48,6 +48,9 @@ NETWORK_GATEWAY=10.0.0.1
 # Enable DVR with SNAT
 Q_DVR_MODE=dvr_snat
 
+# Simplify things by only using IPv4
+IP_VERSION=4
+
 HOST_IP=HOSTIP
 
 # workaround for https://bugs.launchpad.net/horizon/+bug/1622684
@@ -58,3 +61,12 @@ NOVNC_BRANCH=v0.6.0
 l2_population = True
 enable_vxlan = True
 local_ip=$HOST_IP
+
+[[post-config|$NEUTRON_CONF]]
+[DEFAULT]
+router_distributed=True
+
+[agent]
+tunnel_types=vxlan
+l2_population=True
+enable_distributed_routing=True

@@ -1,29 +1,66 @@
 [[local|localrc]]
-HOST_IP=HOSTIP
-FLAT_INTERFACE=eth0
-FIXED_RANGE=10.4.128.0/20
-FIXED_NETWORK_SIZE=4096
-FLOATING_RANGE=192.168.42.128/25
-MULTI_HOST=1
-LOGFILE=/opt/stack/logs/stack.sh.log
-ADMIN_PASSWORD=secrete
-DATABASE_PASSWORD=secrete
-RABBIT_PASSWORD=secrete
-SERVICE_PASSWORD=secrete
 DATABASE_TYPE=mysql
 SERVICE_HOST=CONTROLLER_HOST
 MYSQL_HOST=$SERVICE_HOST
 RABBIT_HOST=$SERVICE_HOST
 GLANCE_HOSTPORT=$SERVICE_HOST:9292
-
-# toggle the services we do/n't want/need
-disable_service c-sch c-api c-vol h-eng h-api h-api-cfn h-api-cw tempest
 ENABLED_SERVICES=n-cpu,q-l3,q-agt,n-api-meta
+# Enable multi-host
+MULTI_HOST=1
+
+# Disable cinder/heat/tempest for faster testing
+disable_service c-sch c-api c-vol h-eng h-api h-api-cfn h-api-cw tempest
+
+# Secrets
+ADMIN_PASSWORD=secrete
+DATABASE_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+
+## Use ML2 + LinuxBridge
+LB_PHYSICAL_INTERFACE=eth0
+PHYSICAL_NETWORK=public
+
+# Set ML2 plugin + LB agent
+Q_PLUGIN=ml2
+Q_AGENT=linuxbridge
+
+# Set ML2 mechanism drivers to LB and l2pop
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=linuxbridge,l2population
+
+# Set type drivers
+Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+
+# Use Neutron security groups
+Q_USE_SECGROUP=True
+
+# Set possible tenant network types
+Q_ML2_TENANT_NETWORK_TYPE=flat,vlan,vxlan
+FIXED_RANGE=10.0.0.0/24
+NETWORK_GATEWAY=10.0.0.1
+
+# Enable DVR with SNAT
+Q_DVR_MODE=dvr
+HOST_IP=208.113.129.102
+
+# workaround for https://bugs.launchpad.net/horizon/+bug/1622684
+NOVNC_BRANCH=v0.6.0
+
+# Simplify things by only using IPv4
+IP_VERSION=4
 
 NOVA_VNC_ENABLED=True
 NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_auto.html"
 VNCSERVER_LISTEN=$HOST_IP
 VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
 
-# enable dvr mode
-Q_DVR_MODE=dvr_snat
+[[post-config|/$Q_PLUGIN_CONF_FILE]]
+[vxlan]
+l2_population = True
+enable_vxlan = True
+local_ip=$HOST_IP
+
+[agent]
+tunnel_types=vxlan
+l2_population=True
+enable_distributed_routing=True
