@@ -131,6 +131,3 @@
       become_user: ubuntu
       args:
         chdir: 'devstack'
-
-    - debug: msg="Horizon is located at http://{{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}/dashboard as admin/secrete"
-    - debug: msg="Compute ssh connection info {{ hostvars['compute']['ansible_eth0']['ipv4']['address'] }}"
