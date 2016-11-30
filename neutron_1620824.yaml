@@ -6,6 +6,7 @@
     controller_name: 'controller'
     compute_name: 'compute'
     key_name: 'dwahlstrom'
+    network_name: 'private-network'
 
   tasks:
 
@@ -31,7 +32,7 @@
         key_name: "{{key_name}}"
         timeout: 200
         flavor: 400
-        network: 'public'
+        network: "{{network_name}}"
         security_groups:
           - default
           - devstack
@@ -45,7 +46,7 @@
         key_name: "{{key_name}}"
         timeout: 200
         flavor: 400
-        network: 'public'
+        network: "{{network_name}}"
         security_groups:
           - default
           - devstack
