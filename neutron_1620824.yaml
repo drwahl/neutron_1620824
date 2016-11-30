@@ -117,7 +117,7 @@
       become: yes
       become_user: ubuntu
 
-    - lineinfile: dest=devstack/local.conf regexp=^HOST_IP=HOSTIP line=HOST_IP={{ hostvars['controller']['ansible_eth0']['ipv4']['address'] }}
+    - lineinfile: dest=devstack/local.conf regexp=^HOST_IP=HOSTIP line=HOST_IP={{ hostvars['compute']['ansible_eth0']['ipv4']['address'] }}
       become: yes
       become_user: ubuntu
 
